@@ -24,38 +24,6 @@
 
 ### Integration with GCP services
 
-## 6. Cloud SQL
-### Instance creation
-
-### Instance management
-
-### Database migration
-
-### Replication
-
-### Backup strategies
-
-### Recovery strategies
-
-### Performance tuning
-
-### Monitoring
-
-## 7. GCS
-### Buckets and objects
-
-### Lifecycle management
-
-### Versioning
-
-### Access control
-
-### Security features
-
-### Data transfer
-
-### Storage classes
-
 ## 8. Networking
 ### VPCs
 
