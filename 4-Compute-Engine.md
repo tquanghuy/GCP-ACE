@@ -302,3 +302,13 @@ OS Login provides centralized SSH key management through IAM instead of managing
 | **Managed Instance Groups** | Zonal/Regional | Zonal: single zone, Regional: multi-zone | Cannot change type after creation |
 | **Firewall Rules** | Global | Apply across all regions | No movement needed |
 | **Static IP Addresses** | Regional/Global | Regional: VMs, Global: Load balancers | Cannot move between regions |
+
+## Exam Tips
+- Network bandwidth is limited and dependent on vCPU count (up to ~32Gbps for N2s, with Tier 1 extending further).
+- Expect the best network performance for traffic within the same zone, using internal IP addresses.
+- Multi-NIC VMs are supported, with up to 8 network interfaces per VM.
+- Storage is a network resource, meaning network bandwidth is shared between network and disk activity.
+- Preemptible VMs can also used for GKE.
+- You can’t update existing instance
+template (need to create a new
+one).

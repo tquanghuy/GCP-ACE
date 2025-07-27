@@ -155,3 +155,7 @@ Cluster management in GKE involves the following key tasks:
 - Define rules for controlling traffic flow to and from Pods.
 - Use Network Policies to enhance security by restricting access to specific Pods or namespaces.
 - Policies are implemented by network plugins (e.g., Calico, Cilium).
+
+## Exam Tips
+- IAM and Kubernetes RBAC work together to help manage access to your cluster.
+RBAC controls access on a cluster and namespace level, while IAM works on the project level

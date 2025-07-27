@@ -241,3 +241,10 @@
 | **Maximum Storage** | 30TB | Petabyte scale | Unlimited | Petabyte scale | 300GB |
 | **Key Features** | Managed MySQL/PostgreSQL/SQL Server | Global transactions | Real-time sync, offline support | High-throughput, low latency | Sub-millisecond latency |
 | **Minimum Setup** | Single instance | 3 nodes (production) | Serverless | 3 nodes (production) | Single instance |
+
+## Exam Tips
+- Dual-region buckets are only available for selected regions.
+- Depending on size and throughput, use gsutil / Transfer Service (low cost) / Transfer
+Appliance.
+- Storage Transfer Service can be set up one-off (e.g., move bucket to new
+location) and recurring (e.g., back up from S3 to GCS with rsync-like semantics).
