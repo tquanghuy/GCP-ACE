@@ -7,12 +7,16 @@
 ## Compute Options
 - **Machine Families**: General-purpose, Compute-optimized, Memory-optimized, Accelerator-optimized.
 - **Custom Machine Types**: Tailored configurations for specific workloads.
+- Note: Custom machines can be used only for
+some VM families & up to 224vCPU/896 GB RAM
 
 ## Pricing and Discounts
 
 - **Per-second billing**: You are charged by the second, with a minimum charge of 1 minute per VM instance.
-- **Sustained use discounts**: Automatically applied when you run instances for a significant portion of the month, reducing costs without any commitment.
-- **Committed use discounts**: Receive deeper discounts by committing to use specific resources (vCPUs, memory) for 1 or 3 years, regardless of actual usage.
+- **Sustained use discounts**: Automatically applied when you run instances for a significant portion of the month, reducing costs without any commitment.  
+  - **Savings**: Can reach up to 30% off compared to standard pricing, depending on usage level.
+- **Committed use discounts**: Receive deeper discounts by committing to use specific resources (vCPUs, memory) for 1 or 3 years, regardless of actual usage.  
+  - **Savings**: Can reach up to 57% off compared to pay-as-you-go pricing for eligible resources.
 
 ## Special Types of VMs
 ### Preemptible VMs
@@ -27,18 +31,18 @@
 
 ### Comparison of Special VM Types
 
-| VM Type           | Base Features                                      | Zone/Region Scope | Use Cases                                      |
-|-------------------|---------------------------------------------------|-------------------|-----------------------------------------------|
-| Sole-tenant Nodes | Dedicated servers for compliance and performance. | **Zonal resource** | Workloads requiring physical isolation.       |
-| Shielded VMs      | Enhanced security with Secure Boot and vTPM.      | **Zonal resource** | Protect against rootkits and bootkits.        |
-| Confidential VMs  | Data encryption using AMD SEV technology.         | **Zonal resource** | Secure sensitive workloads like financial data.|
+| VM Type           | Base Features                                      | Use Cases                                      |
+|-------------------|---------------------------------------------------|-----------------------------------------------|
+| Sole-tenant Nodes | Dedicated servers for compliance and performance. | Workloads requiring physical isolation.       |
+| Shielded VMs      | Enhanced security with Secure Boot and vTPM.      | Protect against rootkits and bootkits.        |
+| Confidential VMs  | Data encryption using AMD SEV technology.         | Secure sensitive workloads like financial data.|
 
 ## Disks
 
 ### Persistent Disks
 - **Key Features**:
   - Network-attached storage (through network interface) that's durable and bootable
-  - Can be resized while running
+  - Can be resized while running (only extend but cannot shrink)
   - Supports snapshots for backup
   - Can be attached read-only to multiple VMs
 - **Zone/Region Information**:
@@ -69,21 +73,44 @@
   - Cannot be moved between zones or regions
 
 ## Images
-- **Definition**: Pre-configured virtual disk templates for VM creation.
-- **Types**: Public, Custom, Premium.
-- **Zone/Region Scope**: Images are **global resources** - can be used to create VMs in any zone/region.
-- **Best Practices**: Update custom images regularly; use public images for general workloads.
+- **Definition**: Pre-configured virtual disk templates used to create new VM instances quickly and consistently.
+- **Scope**: Images are **global resources**—usable to create VMs in any zone or region.
+- **Key Exam Points**:
+  - **Image Families**: Group related images; always points to the latest non-deprecated image in the family. Use `--image-family` for automated deployments.
+  - **Image Sharing**: Custom images can be shared across projects using IAM permissions.
+  - **Image Creation**: Can be created from a disk, snapshot, or another image. Stop the VM before creating an image for consistency.
+  - **Image Import/Export**: Import images from on-premises or other clouds; export images for backup or migration.
+  - **Security**: Images can be encrypted with customer-managed keys (CMEK).
+  - **Best Practices**:
+    - Regularly update and patch custom images.
+    - Use public images for standard workloads unless customization is required.
+    - Use image families for automation and consistency.
+    - Clean up unused custom images to reduce storage costs.
+- **Exam Tips**:
+  - Images are not tied to a zone or region.
+  - Use images for rapid, consistent VM deployment.
+  - Use custom images to standardize environments or pre-install software.
+  - Use IAM to control who can use or modify images.
 
 ## Snapshots
-- **Definition**: Point-in-time backups of persistent disks.
+- **Definition**: Point-in-time, incremental backups of persistent disks (not local SSDs).
 - **Key Exam Points**:
-  - Stored in Cloud Storage (behind the scenes)
-  - Incremental: Only changed blocks are saved
-  - **Global resource**: Can be used across regions/zones to create new disks anywhere
-  - Encrypted by default
-  - Used for disk type conversion and VM migration
-  - Not available for local SSDs
-  - Automatically compressed
+  - **Global resource**: Snapshots are not tied to a zone or region; you can restore disks from a snapshot in any zone or region.
+  - **Incremental**: After the first full snapshot, only changed blocks are saved, reducing storage costs.
+  - **Storage**: Snapshots are stored in Cloud Storage (managed by Google, not directly visible).
+  - **Encryption**: Encrypted by default; can use customer-managed encryption keys (CMEK).
+  - **Use Cases**:
+    - Backup and disaster recovery
+    - Migrating VMs/disks across zones or regions
+    - Converting disk types (e.g., from HDD to SSD)
+  - **Automation**: Snapshot schedules can automate regular backups.
+  - **Limitations**:
+    - Not available for local SSDs (only persistent disks)
+    - Snapshots are crash-consistent, not application-consistent by default
+  - **Best Practices**:
+    - Use snapshot schedules for regular backups
+    - Clean up old snapshots to control costs
+    - Use labels to organize and manage snapshots
 
 ## Instance Groups
 - **Definition**: Collections of VM instances that can be managed as a single entity
@@ -120,6 +147,103 @@
 - **Shutdown Scripts**: Run when instance is stopped or restarted
   - Limited execution time (90 seconds by default)
   - Useful for cleanup tasks and graceful shutdowns
+
+## Networking in Compute Engine
+### Network interface
+  - When you create a VM, you must specify the subnet (and thus the region) it will use.
+  - Each VM instance must be assigned to a **single primary subnet** at creation, which determines its main network interface (`nic0`) and internal IP address.
+  - You can add **secondary network interfaces** (up to 8 total per VM, including the primary), but each additional interface must be attached to a different subnet within **different VPC networks** (except for RDMA-enabled networks where multiple interfaces can use the same VPC).
+- **Exam Tips**:
+  - **Network bandwidth is limited and dependent on vCPU count** (up to ~32Gbps for N2 series + Tier 1 networking extends further)
+  - **Best network performance** is achieved for traffic within the same zone using internal IP addresses
+  - **Multi-NIC VMs** support up to 8 network interfaces total (including primary)
+  - **Storage is a network resource** - network bandwidth is shared between network traffic AND disk activity
+
+### IP addresses
+
+#### Internal IP Addresses
+- **Automatically assigned** from subnet's CIDR range for VPC communication
+- **Persistent**: Same IP throughout VM lifecycle (start/stop/restart)
+- **Assignment**: Automatic or custom (within subnet range)
+- **Scope**: VPC-wide unique, cannot change after VM creation
+- **Cost**: Free
+- **Communication**: VM-to-VM within VPC and Google Cloud services
+
+#### External IP Addresses
+- **Optional**: Enable internet access to/from VMs
+- **Types**:
+
+  - Ephemeral External IP
+    - **Temporary**: Released when VM stopped/deleted, may change on restart
+    - **Cost**: Charged only while VM running
+    - **Use case**: Development, testing
+
+  - Static External IP
+    - **Persistent**: Reserved even when unattached, same IP across restarts
+    - **Regional resource**: Only usable within same region
+    - **Cost**: Charged continuously while reserved (extra fee for unused)
+    - **Management**: Can promote ephemeral to static, transfer between VMs
+    - **Use case**: Production servers, DNS configurations
+
+#### Key Distinctions
+- **Regional External IPs**: For VM instances and regional load balancers
+- **Global External IPs**: Only for global load balancers, **cannot attach to VMs**
+
+#### IP Address Ranges
+- **Internal**: Must use RFC 1918 private ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`)
+- **Reserved per subnet**: First IP (network), second IP (gateway), second-to-last, last IP (broadcast)
+  - **Example**: For subnet `10.1.0.0/24` (256 total IPs):
+    - Reserved: `10.1.0.0` (network), `10.1.0.1` (gateway), `10.1.0.254`, `10.1.0.255` (broadcast)
+    - Available for VMs: `10.1.0.2` through `10.1.0.253` (252 usable addresses)
+
+#### Critical Exam Scenarios
+- **VM without external IP + Private Google Access**: Access Google APIs
+- **VM without external IP + Cloud NAT**: Outbound internet access
+- **Ephemeral IP**: New external IP on restart, internal IP unchanged
+- **Static IP**: Both internal and external IPs remain constant
+- **Cost optimization**: Ephemeral for dev, static only when necessary
+
+### Cloud NAT and Cloud Router
+
+#### Cloud NAT (Network Address Translation)
+- **Purpose**: Provides outbound internet access for Compute Engine VMs **without external IP addresses**
+- **Key Features**:
+  - **Regional resource**: Operates at the regional level
+  - **Managed service**: Fully managed by Google, no infrastructure to maintain
+  - **Requires Cloud Router**: Must have Cloud Router in same region
+- **Common Use Cases for ACE**:
+  - VMs downloading software updates from the internet
+  - VMs accessing external APIs while remaining private
+  - Private instances needing outbound internet access
+- **Critical Limitations**:
+  - **Outbound only**: Does NOT provide inbound internet access to VMs
+  - **No inbound connections**: External users cannot reach VMs through Cloud NAT
+  - **Regional scope**: Each region needs its own Cloud NAT
+
+#### Cloud Router
+- **Purpose**: Required component for Cloud NAT to provide outbound internet access to VMs without external IPs
+- **Key Features**:
+  - **Regional resource**: Operates within a specific region
+  - **Required for Cloud NAT**: Cloud NAT cannot function without Cloud Router
+- **ACE Exam Focus**:
+  - **Primary use case**: Enabling Cloud NAT for Compute Engine VMs
+  - **Regional scope**: Each region needs its own Cloud Router for Cloud NAT
+  - **Configuration**: When creating Cloud NAT, you must specify an existing Cloud Router or create a new one
+
+#### Relationship Between Cloud NAT and Cloud Router
+- **Dependency**: Cloud NAT **requires** Cloud Router to function
+- **Configuration**: Must create Cloud Router before creating Cloud NAT in the same region
+
+#### Essential Commands for ACE
+- **Create Cloud Router for NAT**:
+  ```
+  gcloud compute routers create ROUTER_NAME --network=VPC_NAME --region=REGION
+  ```
+- **Create Cloud NAT**:
+  ```
+  gcloud compute routers nats create NAT_NAME --router=ROUTER_NAME --region=REGION --nat-all-subnet-ip-ranges --auto-allocate-nat-external-ips
+  ```
+- **Key exam scenario**: "VM without external IP needs internet access" → Answer: Configure Cloud NAT (requires Cloud Router)
 
 ## Common Actions
 

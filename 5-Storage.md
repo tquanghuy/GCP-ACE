@@ -49,6 +49,8 @@
 - Lowercase letters, numbers, hyphens, underscores only
 - Cannot start/end with hyphen or contain consecutive periods
 
+### Object lifecycle
+
 ## Cloud SQL
 - Fully managed relational databases (MySQL, PostgreSQL, SQL Server)
 - Automatic backups, patches, and updates

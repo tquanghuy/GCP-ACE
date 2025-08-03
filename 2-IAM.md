@@ -35,49 +35,31 @@
             - **Storage Admin**: Permissions to create, modify and delete disks, images and snapshots.
     - **Custom roles**: Let us define a precise set of permissions.
 - **Basic roles are not recommended for fine-grained access control**.
-- **Permissions for basic roles**:
-    - **Owner**
-        - **Invite members**.
-        - **Remove members**.
-        - **Delete projects**.
-        - **All Editor and Viewer permissions**.
-    - **Editor**
-        - **Deploy applications**.
-        - **Modify code**.
-        - **Configure services**.
-        - **All Viewer permissions**.
-        - **Manage billing**.
-    - **Viewer**
-        - **Read-only access to resources**.
-        - **View billing information**.
-    - **Billing Administrator**
-        - **Manage billing**.
-        - **Add/remove administrators**.
-        - **View billing information**.
 - **Custom roles are created at the organization or project level**.
 
 ## Service accounts
-- **Provide identities for carrying out server-to-server interactions**.
-- **They are identified with an email address**. Ex: **service-account-name@project-id.iam.gserviceaccount.com**.
-- **Programs running within Compute Engine instances can automatically acquire credentials of service account attached to that instance**.
-## Types of Google Service Accounts
-- **User-managed service accounts**: Created and managed by users for specific applications or workloads. Users control their permissions and lifecycle.
-    - **Google only stores public key, user is responsible for managing private key**.
-- **Default service accounts**: Automatically created by Google Cloud for each project and service (e.g., Compute Engine default service account). Used by resources when no user-managed account is specified.
-    - **By default, the Compute Engine default service account is granted the Editor role at the project level**.
-    - **By default, it is enabled on all instances created using gcloud Cloud Console**.
-    - **Users can modify their permissions and use them for specific workloads**.
-- **Google-managed service accounts**: Created and managed by Google for specific Google services (e.g., App Engine, Cloud Functions). Used internally by Google services to access resources on your behalf.
-    - **These accounts are controlled entirely by Google and cannot be managed directly by users**.
-    - **They are used for internal operations of Google services to interact with GCP resources**.
+- **Used for server-to-server authentication**.
+- **Identified by an email address** (e.g., `service-account-name@project-id.iam.gserviceaccount.com`).
+- **Compute Engine instances can use attached service account credentials automatically**.
+### Types of Google Service Accounts
+- **User-managed service accounts**
+    - Created and managed by users for specific workloads.
+    - Users manage private keys.
+- **Default service accounts**
+    - Automatically created for each project/service.
+    - Used when no user-managed account is specified.
+    - Permissions can be modified.
+- **Google-managed service accounts**
+    - Created and managed by Google for internal service operations.
+    - Not user-manageable.
 ## Organization policies
 - **Purpose**: Enforce constraints on resources to ensure compliance, security, and governance.
 - **Scope**: Applied at organization, folder, or project levels.
 - **Inheritance**: Policies are inherited by child resources unless overridden.
 - **Constraints**:
-  - **Restrict VM instance types**.
-  - **Enforce encryption standards**.
-  - **Limit access to external IPs**.
+    - **Restrict resource sharing by domain**.
+    - **Control service account usage**.
+    - **Enforce resource location constraints**.
 - **Policy Types**:
   - **Boolean constraints**: Enable/disable specific features.
   - **List constraints**: Specify allowed/denied values.
