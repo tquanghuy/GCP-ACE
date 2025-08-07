@@ -156,6 +156,162 @@ Cluster management in GKE involves the following key tasks:
 - Use Network Policies to enhance security by restricting access to specific Pods or namespaces.
 - Policies are implemented by network plugins (e.g., Calico, Cilium).
 
+## Pod Disruption Budgets (PDB)
+
+Pod Disruption Budgets (PDBs) ensure a minimum number of pods remain available during voluntary disruptions, such as node maintenance or cluster upgrades. They help maintain application availability and reliability.
+
+### Key Features
+- Prevents too many pods from being evicted simultaneously.
+- Supports policies like `minAvailable` (minimum pods available) or `maxUnavailable` (maximum pods disrupted).
+- Integrates with GKE's cluster autoscaler and maintenance operations.
+
+### Example Configuration
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: example-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: my-app
+```
+
+### Best Practices
+- Align PDBs with application SLAs.
+- Test PDBs to ensure expected behavior during disruptions.
+- Monitor PDBs using GKE tools.
+
+## IAM and RBAC in GKE
+
+### IAM (Identity and Access Management)
+- IAM operates at the project level and controls access to GCP resources, including GKE clusters.
+- Key roles for GKE:
+  - **Kubernetes Engine Admin**: Full control over GKE clusters.
+  - **Kubernetes Engine Cluster Viewer**: Read-only access to cluster configurations.
+  - **Kubernetes Engine Developer**: Limited access to deploy workloads without managing clusters.
+
+### RBAC (Role-Based Access Control)
+- RBAC operates at the Kubernetes cluster and namespace levels.
+- Controls access to Kubernetes resources like Pods, Deployments, and Services.
+- Key components:
+  - **Roles**: Define permissions within a namespace.
+  - **ClusterRoles**: Define permissions across the entire cluster.
+  - **RoleBindings**: Grant roles to users or service accounts within a namespace.
+  - **ClusterRoleBindings**: Grant cluster-wide roles to users or service accounts.
+
+### Integration of IAM and RBAC
+- IAM manages who can access the cluster, while RBAC manages what they can do within the cluster.
+- Use IAM to authenticate users and RBAC to authorize actions.
+
+### Best Practices
+- Use IAM for coarse-grained access control and RBAC for fine-grained permissions.
+- Regularly review and audit IAM roles and RBAC bindings.
+- Follow the principle of least privilege to minimize security risks.
+
+## GKE Sandbox
+
+GKE Sandbox is a security feature that provides an additional layer of isolation for containerized workloads in GKE. It is based on gVisor, a container runtime sandbox.
+
+### Key Features
+- **Enhanced Isolation**: Protects workloads from potential vulnerabilities in the host kernel.
+- **Compatibility**: Supports most Kubernetes workloads with minimal changes.
+- **Integration**: Works seamlessly with GKE clusters.
+
+### Use Cases
+- **Multi-Tenant Environments**: Ensures stronger isolation between workloads from different tenants.
+- **Untrusted Workloads**: Provides additional security for running third-party or less-trusted applications.
+- **Compliance Requirements**: Helps meet strict security and compliance standards.
+
+### Enabling GKE Sandbox
+To enable GKE Sandbox, specify the `sandbox.gke.io/runtime: gvisor` annotation in the Pod specification:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sandboxed-pod
+  annotations:
+    sandbox.gke.io/runtime: gvisor
+spec:
+  containers:
+  - name: my-container
+    image: my-image
+```
+
+### Best Practices
+- Use GKE Sandbox for workloads requiring high security and isolation.
+- Test workloads for compatibility with gVisor before enabling.
+- Monitor performance, as sandboxing may introduce slight overhead.
+
+## GKE Networking
+
+GKE provides robust networking capabilities to manage traffic within and outside the cluster.
+
+### Key Features
+- **VPC-Native Clusters**: Use Google Cloud's Virtual Private Cloud (VPC) for pod and service networking.
+- **Pod IPs**: Each pod gets a unique IP address, enabling direct communication without NAT.
+- **Service IPs**: Services are assigned stable IPs for internal and external access.
+- **Load Balancing**: Integrates with Google Cloud Load Balancer for external traffic management.
+- **Network Policies**: Control traffic flow to and from pods using Kubernetes Network Policies.
+
+### Use Cases
+- **Internal Communication**: Use ClusterIP services for pod-to-pod communication within the cluster.
+- **External Access**: Use LoadBalancer services or Ingress for exposing applications to the internet.
+- **Traffic Control**: Use Network Policies to restrict access to sensitive workloads.
+
+### Best Practices
+- Use VPC-native clusters for better scalability and integration with Google Cloud networking.
+- Define Network Policies to enhance security by limiting traffic to specific pods or namespaces.
+- Monitor network traffic using Cloud Monitoring and Logging tools.
+
+## GKE Workload Identity
+
+GKE Workload Identity is a feature that allows Kubernetes workloads to securely access Google Cloud services using IAM service accounts.
+
+### Key Features
+- **Secure Access**: Eliminates the need for long-lived service account keys.
+- **Identity Mapping**: Maps Kubernetes service accounts to Google Cloud IAM service accounts.
+- **Granular Permissions**: Assigns least privilege permissions to workloads.
+
+### Configuration Steps
+1. **Enable Workload Identity**:
+   - Enable Workload Identity on the GKE cluster during creation or update.
+
+   ```bash
+   gcloud container clusters update CLUSTER_NAME \
+       --workload-pool=PROJECT_ID.svc.id.goog
+   ```
+
+2. **Create a Kubernetes Service Account (KSA)**:
+   ```bash
+   kubectl create serviceaccount KSA_NAME
+   ```
+
+3. **Create and Bind an IAM Service Account (IAM SA)**:
+   ```bash
+   gcloud iam service-accounts create IAM_SA_NAME
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+       --member="serviceAccount:IAM_SA_NAME@PROJECT_ID.iam.gserviceaccount.com" \
+       --role="ROLE"
+   ```
+
+4. **Annotate the KSA**:
+   Link the KSA to the IAM SA:
+   ```bash
+   kubectl annotate serviceaccount KSA_NAME \
+       iam.gke.io/gcp-service-account=IAM_SA_NAME@PROJECT_ID.iam.gserviceaccount.com
+   ```
+
+5. **Deploy Workloads**:
+   Use the annotated KSA in your Pod specifications.
+
+### Best Practices
+- Use Workload Identity instead of service account keys for enhanced security.
+- Assign least privilege roles to IAM service accounts.
+- Regularly audit IAM policies and Kubernetes RBAC bindings.
+
 ## Exam Tips
 - IAM and Kubernetes RBAC work together to help manage access to your cluster.
 RBAC controls access on a cluster and namespace level, while IAM works on the project level

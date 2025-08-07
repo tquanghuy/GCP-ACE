@@ -136,6 +136,24 @@ some VM families & up to 224vCPU/896 GB RAM
     - **Zone failure protection**: Continues operating if one zone fails
     - **Best practice for production**: Recommended for critical workloads
 
+### Rolling Out Updates in Managed Instance Groups (MIGs)
+- **Rolling Updates**: Gradually update instances in a MIG to minimize downtime and ensure stability.
+  - **Update Policy**: Define how updates are applied (e.g., proactive or opportunistic).
+  - **Max Surge**: Number of additional instances created temporarily during updates.
+  - **Max Unavailable**: Number of instances that can be unavailable during updates.
+  - **Instance Redistribution**: Ensures even distribution of instances across zones in regional MIGs.
+- **Rolling Restart**: Restart instances in a MIG without changing the instance template.
+- **Rolling Modes**: Specify how updates are applied to instances in a MIG.
+  - **Proactive Mode**: Updates are applied immediately to all instances, adhering to `max-surge` and `max-unavailable` settings.
+  - **Opportunistic Mode**: Updates are applied only when instances are idle or during scheduled maintenance windows.
+  - **Exam Tips**:
+    - Use proactive mode for critical updates requiring immediate application.
+    - Use opportunistic mode to minimize disruption for workloads sensitive to downtime.
+- **Exam Tips**:
+  - Use rolling updates to minimize disruption during instance template changes.
+  - Configure `max-surge` and `max-unavailable` to balance speed and availability.
+  - Use `gcloud compute instance-groups managed rolling-action` commands for updates.
+
 ## Metadata and Scripts
 - **Instance Metadata**: Every VM instance stores data about itself on a metadata server
   - Accessible at `http://metadata.google.internal/computeMetadata/v1/`
@@ -244,6 +262,39 @@ some VM families & up to 224vCPU/896 GB RAM
   gcloud compute routers nats create NAT_NAME --router=ROUTER_NAME --region=REGION --nat-all-subnet-ip-ranges --auto-allocate-nat-external-ips
   ```
 - **Key exam scenario**: "VM without external IP needs internet access" → Answer: Configure Cloud NAT (requires Cloud Router)
+
+## Forwarding Rules
+
+### Definition
+- **Purpose**: Forwarding rules are used to direct traffic to specific target resources based on protocol and IP address.
+- **Key Exam Points**:
+  - Forwarding rules are **regional resources**.
+  - They can direct traffic to **target instances**, **target pools**, **target HTTP(S) proxies**, or **target VPN gateways**.
+
+### Types
+- **Internal Forwarding Rules**:
+  - Used for internal load balancing.
+  - Direct traffic within a VPC.
+  - Support TCP/UDP protocols.
+- **External Forwarding Rules**:
+  - Used for external load balancing.
+  - Direct traffic from the internet to Google Cloud resources.
+  - Support HTTP(S), TCP, SSL Proxy, and UDP protocols.
+
+### Key Features
+- **Protocol Support**: Specify the protocol (e.g., TCP, UDP, HTTP).
+- **IP Address**: Can use ephemeral or static IP addresses.
+- **Port Range**: Define specific ports or ranges for traffic.
+
+### Best Practices
+- Use **static IP addresses** for production workloads to ensure consistent IPs.
+- Ensure forwarding rules are in the same region as the target resource.
+- Use appropriate firewall rules to allow traffic to the forwarding rule's target.
+
+### Exam Tips
+- Forwarding rules are required for both **internal** and **external** load balancers.
+- Internal forwarding rules are limited to traffic within the same VPC.
+- External forwarding rules can handle traffic from the internet or other networks.
 
 ## Common Actions
 

@@ -50,42 +50,101 @@
 - Cannot start/end with hyphen or contain consecutive periods
 
 ### Object lifecycle
+- **Retention policy**:
+  - Enforces a minimum retention period for objects in a bucket.
+  - Objects cannot be deleted or overwritten until the retention period expires.
+  - Retention period can range from 1 day to 3650 days (10 years).
+  - Useful for compliance and regulatory requirements.
+  - **Bucket retention**:
+    - Applies to all objects within the bucket.
+    - Retention period is defined at the bucket level and applies uniformly.
+    - Can be used with **bucket lock** to enforce compliance.
+  - **Object retention**:
+    - Individual objects can have retention policies independent of the bucket.
+    - Useful for granular control over specific objects.
+    - Retention policies can be overridden by bucket-level policies if not locked.
+  - **Bucket lock**:
+    - Makes the retention policy permanent and unchangeable.
+    - Once locked, the retention policy cannot be removed or reduced.
+- **Object Hold**:
+  - Prevents an object from being deleted or overwritten.
+  - Two types of holds:
+    - **Event-based hold**:
+      - Retention starts after a specific event occurs (e.g., loan repayment).
+      - Releasing the hold resets the retention period.
+    - **Temporary hold**:
+      - Used for regulatory or legal purposes.
+      - Does not affect the retention period.
+  - Holds can be applied individually to objects or set as a default for a bucket.
+  - Objects with holds can have their metadata edited but cannot be deleted or replaced.
+- **Object Versioning**:
+  - Preserves deleted or overwritten objects as noncurrent versions.
+  - Noncurrent versions retain the same object name but are uniquely identified by a generation number.
+  - Allows recovery of specific object versions.
+  - Can be combined with Object Lifecycle Management to automatically delete older versions.
+  - Noncurrent versions are charged at the same rate as live objects.
+- **Object Lifecycle Management**:
+  - Automates actions on objects based on specified conditions.
+  - Common actions:
+    - **Delete**: Removes objects meeting the conditions.
+    - **SetStorageClass**: Changes the storage class of objects (e.g., Standard to Coldline).
+    - **AbortIncompleteMultipartUpload**: Cancels incomplete multipart uploads.
+  - Common conditions:
+    - **age**: Object age in days.
+    - **createdBefore**: Objects created before a specific date.
+    - **isLive**: Whether the object is live or noncurrent.
+    - **matchesStorageClass**: Objects in a specific storage class.
+    - **numNewerVersions**: Number of newer versions for versioned objects.
+
+### Access Control List (ACL)
+
+Access Control Lists (ACLs) in Google Cloud Storage (GCS) allow you to define access to buckets and objects. ACLs consist of entries specifying permissions and scopes.
+
+#### Key Concepts
+- **Permissions**:
+  - `READER`: List bucket contents, read object data.
+  - `WRITER`: Includes `READER` and allows creating, replacing, deleting objects.
+  - `OWNER`: Includes `WRITER` and allows managing metadata and ACLs.
+
+- **Scopes**:
+  - `allUsers`: Public access.
+  - `allAuthenticatedUsers`: All authenticated accounts.
+  - Specific users, groups, or domains.
+
+#### Predefined ACLs
+- `private`: Grants `OWNER` to the bucket or object owner.
+- `projectPrivate`: Default for new buckets/objects, grants access based on project roles.
+- `publicRead`: Grants `OWNER` to the owner and `READER` to all users.
+
+#### Best Practices
+- Prefer IAM policies over ACLs for simpler, secure access control.
+- Enable uniform bucket-level access to disable ACLs.
+- Avoid `publicRead` unless necessary.
+
+For more details, refer to the [official documentation](https://cloud.google.com/storage/docs/access-control/lists).
 
 ## Cloud SQL
-- Fully managed relational databases (MySQL, PostgreSQL, SQL Server)
-- Automatic backups, patches, and updates
-- High availability with failover replicas
-- Point-in-time recovery
-- Read replicas for scaling and disaster recovery
-- Up to 30TB storage capacity
+- Fully managed relational databases (MySQL, PostgreSQL, SQL Server).
+  - Google Cloud handles provisioning, patching, backups, and monitoring.
+  - Ideal for applications requiring ACID compliance and SQL queries.
 
 ### Key Features
-- **Security**: IAM integration, encryption at rest and in transit
-- **Instance types**: Shared-core (f1-micro, g1-small), Standard, High-memory, Custom
-- **Storage types**: SSD (default) or HDD for cost optimization
-- **Maintenance windows**: Scheduled updates during low-traffic periods
-
-### High Availability Configuration
-- **Regional HA**: Primary and standby instances in different zones within same region
-- **Automatic failover**: Typically 60-120 seconds during zone failure
-- **Synchronous replication**: Data replicated to standby before transaction commit
-- **Read replicas**: Up to 10 replicas for read scaling (asynchronous replication)
-- **Cross-region replicas**: For disaster recovery across regions
+- **Security**: IAM integration, encryption at rest and in transit.
+  - Data encrypted using Google-managed keys or customer-managed keys (CMEK).
+- **High availability**: Regional HA with automatic failover (60-120 seconds).
+  - Synchronous replication ensures zero data loss (RPO = 0).
+- **Scaling**: Read replicas for scaling read-heavy workloads.
+  - Cross-region replicas for disaster recovery.
 
 ### Connection Options
-- **Public IP**: Internet access with authorized networks (IP whitelist)
-- **Private IP**: VPC-native connectivity, no internet exposure required
-- **Cloud SQL Proxy**: Secure tunnel with IAM authentication, no SSL management
-- **Private Google Access**: Connect from instances without external IPs
-- **SSL/TLS**: Encrypted connections supported for all connection types
+- **Private IP**: VPC-native connectivity, no internet exposure.
+- **Cloud SQL Proxy**: Secure tunnel with IAM authentication.
+- **SSL/TLS**: Encrypted connections for all connection types.
 
 ### Backup and Recovery
-- **Automatic backups**: Daily backups during maintenance window
-- **Backup retention**: 7 days default (configurable up to 365 days)
-- **Point-in-time recovery**: Binary log retention enables recovery to specific timestamp
-- **On-demand backups**: Manual backups for specific recovery points
-- **Export options**: SQL dump or CSV export to Cloud Storage
-- **Import options**: SQL dump, CSV, or BAK files from Cloud Storage
+- **Automatic backups**: Daily backups with configurable retention.
+- **Point-in-time recovery**: Recover to a specific timestamp using binary logs.
+- **Export/Import**: SQL dump or CSV for data migration.
 
 ## Cloud Spanner
 - Globally distributed, strongly consistent relational database
